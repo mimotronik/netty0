@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 /**
+ * 本地文件写
  * @author winterfell
  **/
 public class NIOFileChannel01 {
@@ -13,7 +14,7 @@ public class NIOFileChannel01 {
         String str = "hello world";
 
         // 1. 创建一个输出流
-        FileOutputStream outputStream = new FileOutputStream("D:/file01.txt");
+        FileOutputStream outputStream = new FileOutputStream("D:/tmp/nio/file01.txt");
 
         // 2. 通过outputStream获取对应的FileChannel
         //    ps: FileChannel 的真实类型是FileChannelImpl
@@ -28,7 +29,7 @@ public class NIOFileChannel01 {
         // 4. 对ByteBuffer 进行flip
         byteBuffer.flip();
 
-        // 5. 将ByteBuffer里面的数据写入到fileChannel  [Debug Point]
+        // 5. 将ByteBuffer里面的数据写入到fileChannel  [Debug Point] callback写法
         fileChannel.write(byteBuffer);
 
         // 6. 关闭流
