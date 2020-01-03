@@ -1,4 +1,4 @@
-package mynio.channel;
+package mynio.filechannel;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

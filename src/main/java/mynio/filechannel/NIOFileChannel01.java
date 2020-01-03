@@ -1,4 +1,4 @@
-package mynio.channel;
+package mynio.filechannel;
 
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
