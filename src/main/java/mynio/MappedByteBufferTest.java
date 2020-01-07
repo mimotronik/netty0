@@ -1,6 +1,5 @@
 package mynio;
 
-import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -25,6 +24,7 @@ public class MappedByteBufferTest {
          *  参数2： 可以直接修改的起始位置
          *  参数3： 映射到内存的大小，即可以文件 多少个字节映射到内存
          *  可以直接修改的范围就是 [0,5)
+         *  实际类型 DirectByteBuffer
          */
         MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, 5);
 
