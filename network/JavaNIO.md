@@ -83,11 +83,11 @@ NIO的Channel类似于流，但也有一定的区别
 - `public long transferTo(long position, long count, WritableByteChannel target)`，把数据从当前通道复制给目标通道
 ### 关于FileChannel和Buffer的注意事项
 - `ByteBuffer` 支持类型化的put 和 get, put 放入的是什么数据类型，get就应该使用相应的数据类型来取出，否则可能有 `BufferUnderflowException` 异常
-    - 示例: [ByteBuffer Put Get](src/main/java/mynio/NIOByteBufferPutGet.java)
+    - 示例: [ByteBuffer Put Get](../src/main/java/mynio/NIOByteBufferPutGet.java)
 - 可以将一个`普通Buffer` 转成 `只读Buffer `
-    - 示例: [Buffer -> ReadOnlyBuffer](src/main/java/mynio/ReadOnlyBuffer.java)
+    - 示例: [Buffer -> ReadOnlyBuffer](../src/main/java/mynio/ReadOnlyBuffer.java)
 - NIO 还提供了 `MappedByteBuffer`， 可以让文件直接在内存（堆外的内存）中进行修改， 而如何同步到文件由NIO 来完成
-    - 示例: [MappedByteBuffer Test](src/main/java/mynio/MappedByteBufferTest.java)
+    - 示例: [MappedByteBuffer Test](../src/main/java/mynio/MappedByteBufferTest.java)
 - NIO 还支持 通过`多个Buffer` (即 Buffer 数组) 完成读写操作，即 `Scattering` 和 `Gathering`
 
 ## Selector
