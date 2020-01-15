@@ -108,7 +108,7 @@ typedef struct list {
 
 ## 2.3 字典
 
-![普通状态下的字典.png](images\普通状态下的字典.png)
+![普通状态下的字典.png](images/普通状态下的字典.png)
 
 Redis 的字典使用哈希表作为底层实现，一个哈希表里面可以有多个哈希表节点，而每个哈希表节点就保存了字典中的一个键值对。
 
@@ -190,7 +190,7 @@ typedef struct dict {
 
 ## 2.4 跳跃表
 
-![跳表结构.png](images\跳表结构.png)
+![跳表结构.png](images/跳表结构.png)
 
 + 跳跃表的实现由 `zskiplistNode` 和  `zskiplist` 两个结构组成，其中  `zskiplistNode` 用于表示跳跃表中的节点信息，`zskiplistNode` 用于表示跳跃表信息（比如表头节点，表尾节点、长度）。
 + 每个跳跃表节点的层高都是 1 到 32 之间的随机数。
@@ -272,7 +272,7 @@ typedef struct intset {
 
 新建一个 intset，类型为 INTSET_ENC_INT16，插入元素（1，2，3），如下图所示：
 
-![intset结构.png](images\intset结构.png)
+![intset结构.png](images/intset结构.png)
 
 此时数组的分布如下：
 
@@ -288,13 +288,13 @@ typedef struct intset {
 
 此时整型数组的结构如下所示：
 
-![升级后的intset.png](images\升级后的intset.png)
+![升级后的intset.png](images/升级后的intset.png)
 
 ## 2.6 压缩列表
 
 压缩列表是为了节约内存而开发的，是由一些特殊编码的连续内存块组成的顺序型数据结构。一个压缩列表可以包含多个节点（entry），每个节点可以保存一个字节数组或者一个整数值。
 
-![压缩列表的各个组成部分.png](images\压缩列表的各个组成部分.png)
+![压缩列表的各个组成部分.png](images/压缩列表的各个组成部分.png)
 
 | 属性    | 长            度 | 用途                                                         |
 | ------- | ---------------- | ------------------------------------------------------------ |
@@ -304,7 +304,7 @@ typedef struct intset {
 | entryX  | 变长             | 压缩表的各个节点                                             |
 | zlend   | 1                | 特殊值 0xFF，用于标记压缩列表的末端                          |
 
-![包含3个节点的压缩列表.png](images\包含3个节点的压缩列表.png)
+![包含3个节点的压缩列表.png](images/包含3个节点的压缩列表.png)
 
 - [x] zlbytes 属性的值为 0x50（十进制80），表示压缩表的总长度是80个字节。
 - [x] zltail 属性的值为 0x3c（十进制60），表示如果我们有一个指向压缩表起始地址的指针P，那么只要用指针 P 加上偏移量60，就可以计算出尾节点 entry3 的地址。
@@ -426,7 +426,7 @@ typedef struct redisObject {
 + `raw` 会调用两次内存分配函数为 `redisObject` 结构和 `sdshdr` 结构分配空间。
 + `embstr` 只会调用一次内存分配函数分配一块连续的内存空间，空间中一次包含 `redisObject` 结构和 `sdshdr` 结构。
 
-![string对象的两种编码格式.png](images\string对象的两种编码格式.png)
+![string对象的两种编码格式.png](images/string对象的两种编码格式.png)
 
 ## 3.3 列表对象
 
@@ -436,7 +436,7 @@ typedef struct redisObject {
 
 假设执行 RPUSH  alph  "aaa" "bbb" "ccc"，则对象结构：
 
-![list两种编码方式.png](images\list两种编码方式.png)
+![list两种编码方式.png](images/list两种编码方式.png)
 
 ### 3.3.2 使用 ziplist 编码的条件
 
@@ -464,7 +464,7 @@ redis> HSET profile career "doctor"
 (integer 1)
 ```
 
-![哈希对象的两种编码.png](images\哈希对象的两种编码.png)
+![哈希对象的两种编码.png](images/哈希对象的两种编码.png)
 
 ### 3.4.2 对象结构的特点
 
@@ -501,7 +501,7 @@ redis> SADD fruits "apple" "banana" "cherry"
 (integer 1)
 ```
 
-![set的两种编码.png](images\set的两种编码.png)
+![set的两种编码.png](images/set的两种编码.png)
 
 ###  3.5.2 使用 intset 编码的条件
 
@@ -523,9 +523,9 @@ redis> ZADD price 8.5 "apple"  5.0 "banana" 6.0 "cherry"
 (integer 1)
 ```
 
-![ziplist编码的有序集合.png](images\ziplist编码的有序集合.png)
+![ziplist编码的有序集合.png](images/ziplist编码的有序集合.png)
 
-![skiplist编码的有序集合.png](images\skiplist编码的有序集合.png)
+![skiplist编码的有序集合.png](images/skiplist编码的有序集合.png)
 
 ### 3.6.2 对象结构的特点
 
@@ -670,7 +670,7 @@ Redis 服务器使用的是惰性删除和定期删除另种策略，通过配�
 
 ### 4.2.1 惰性删除策略
 
-### 							![惰性删除的执行流程.png](images\惰性删除的执行流程.png)
+### 							![惰性删除的执行流程.png](images/惰性删除的执行流程.png)
 
 ```c
 /*
@@ -818,7 +818,7 @@ Redis 提供了两个命令用于生成 RDB 文件，一个是 `SAVE`，另一�
 1. SAVE 命令会阻塞 Redis 服务器，知道 RDB 文件创建完毕，在服务器进程阻塞期间，服务器不能处理任何命令请求
 2. BGSAVE 命令不会阻塞 Redis服务器，做法是通过派生出一个子进程，然后由子进程负责创建 RDB 文件，服务器进程（父进程）继续处理客户端的命令请求。
 
-![RDB文件格式.png](images\RDB文件格式.png)
+![RDB文件格式.png](images/RDB文件格式.png)
 
 ```c
 /*
@@ -998,7 +998,7 @@ Redis 服务器在每次执行客户端发送的读写命令之前，会调用 f
 
 因为 AOF 文件中包含了重建数据库状态所需要的全部写命令，所以服务器只需要读入并执行一遍 AOF 文件中的所有命令，就可以还原服务器关闭之前的数据库状态。
 
-![AOF文件载入过程.png](images\AOF文件载入过程.png)
+![AOF文件载入过程.png](images/AOF文件载入过程.png)
 
 ### 5.3.4  AOF  重写
 
@@ -1072,7 +1072,7 @@ struct redisServer {
 
 在 Redis 服务器的结构中增加一个 AOF 重写缓冲区，这个缓冲区在服务器创建了子线程之后开始使用 。当 Redis 服务器执行完一个写命令之后，它会同时将这个写命令发送给 AOF 缓冲区（aof_buf）和 AOF 重写缓冲区（aof_rewrite_buf_blocks）。
 
-![服务器同时将命令发送给AOF和重写AOF.png](images\服务器同时将命令发送给AOF和重写AOF.png)
+![服务器同时将命令发送给AOF和重写AOF.png](images/服务器同时将命令发送给AOF和重写AOF.png)
 
 当子进程执行完重写 AOF 文件后，向父进程发送一个信号，父进程捕获到这个信号后，将重写 AOF 缓存中的数据追加到新的 AOF 文件中。
 
@@ -1298,7 +1298,7 @@ Redis 基于 Reator 模式开发了自己的网络事件处理器：文件事件
 
 + 当被监听的套接字准备好执行应答（accpet）、读取（read）、写入（write）、关闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器处理这些事件。
 
-  ![文件事件处理器框架.png](images\文件事件处理器框架.png)
+  ![文件事件处理器框架.png](images/文件事件处理器框架.png)
 
   
 
