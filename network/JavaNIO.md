@@ -101,19 +101,20 @@ NIO的Channel类似于流，但也有一定的区别
 
 ![Selector示意图和特点说明.jpg](pic/nio/Selector示意图和特点说明.jpg)
 
-- Netty 的 IO 线程 NioEventLoop 聚合了 Selector(选择器，也叫多路复用器)，可以同时并发处理成百上千个客户端连接。
+- `Netty` 的 IO 线程 `NioEventLoop` 聚合了 Selector(选择器，也叫多路复用器)，可以同时并发处理成百上千个客户端连接。
 - 当线程从某客户端 Socket 通道进行读写数据时，若没有数据可用时，该线程可以进行其他任务。
 - 线程通常将非阻塞 IO 的空闲时间用于在其他通道上执行 IO 操作，所以单独的线程可以管理多个输入和输出通道。
 - 由于读写操作都是非阻塞的，这就可以充分提升 IO 线程的运行效率，避免由于频繁 I/O 阻塞导致的线程挂起。
 - 一个 I/O 线程可以并发处理 N 个客户端连接和读写操作，这从根本上解决了传统同步阻塞 I/O 一连接一线程模型，架构的性能、弹性伸缩能力和可靠性都得到了极大的提升。
 
 **Selector 类的相关方法**
+> Selector 是一个抽象类
 - `public static Selector open();` //得到一个选择器对象
 - `public int select(long timeout);` //监控所有注册的通道，当其中有 IO 操作可以进行时，将
    对应的 SelectionKey 加入到内部集合中并返回，参数用来设置超时时间
 - `public Set<SelectionKey> selectedKeys();` //从内部集合中得到所有的 SelectionKey	
 
-**Selector SelectionKey SeverSocketChannel SocketChannel 的关系**
+**Selector、SelectionKey、SeverSocketChannel、SocketChannel 的关系**
 
 ![Selector_SelectionKey_ServerSocketChannel_SocketChannel关系.jpg](pic/nio/Selector_SelectionKey_ServerSocketChannel_SocketChannel关系.jpg)
 
@@ -125,3 +126,73 @@ NIO的Channel类似于流，但也有一定的区别
 6. 在通过 `SelectionKey`  反向获取 `SocketChannel` , 方法 channel()
 7. 可以通过 得到的`channel`, 完成业务处理
 
+**SelectionKey**
+> SelectionKey，表示 Selector 和网络通道的注册关系, 共四种
+1. int OP_ACCEPT：有新的网络连接可以 accept，值为 16
+2. int OP_CONNECT：代表连接已经建立，值为 8
+3. int OP_READ：代表读操作，值为 1 
+4. int OP_WRITE：代表写操作，值为 4
+```java
+public abstract class SelectionKey{
+
+    public abstract Selector selector();     //得到与之关联的 Selector 对象
+    
+    public abstract SelectableChannel channel(); // 得到与之关联的通道
+     
+    public final Object attachment(); // 得到与之关联的共享数据
+    
+    public abstract SelectionKey interestOps(int ops); // 设置或改变监听事件
+    
+    public final boolean isAcceptable(); // 是否可以accept
+    
+    public final boolean isReadable(); // 是否可读 
+
+    public final boolean isWritable(); // 是否可写
+
+    // ...
+}
+```
+
+**ServerSocketChannel**
+> ServerSocketChannel 在服务器端监听新的客户端 Socket 连接
+```java
+public abstract class ServerSocketChannel extends AbstractSelectableChannel implements NetworkChannel{
+
+    public static ServerSocketChannel open(); // 得到一个 ServerSocketChannel 通道
+
+    public final ServerSocketChannel bind(SocketAddress local); // 设置服务器端端口号
+
+    public final SelectableChannel configureBlocking(boolean block); // 设置阻塞或非阻塞模式，取值 false 表示采用非阻塞模式
+    
+    public SocketChannel accept(); // 接受一个连接，返回代表这个连接的通道对象
+    
+    public final SelectionKey register(Selector sel, int ops); // 注册一个选择器并设置监听事件
+    
+    // ...
+}
+```
+
+**SocketChannel**
+> SocketChannel，网络 IO 通道，具体负责进行读写操作。NIO 把缓冲区的数据写入通道，或者把通道里的数据读到缓冲区
+```java
+public abstract class SocketChannel extends AbstractSelectableChannel implements ByteChannel, ScatteringByteChannel, GatheringByteChannel, NetworkChannel{
+
+    public static SocketChannel open();//得到一个 SocketChannel 通道
+
+    public final SelectableChannel configureBlocking(boolean block);//设置阻塞或非阻塞模式，取值 false 表示采用非阻塞模式
+
+    public boolean connect(SocketAddress remote);//连接服务器
+    
+    public boolean finishConnect(); //如果上面的方法连接失败，接下来就要通过该方法完成连接操作
+    
+    public int write(ByteBuffer src); //往通道里写数据
+    
+    public int read(ByteBuffer dst); //从通道里读数据
+    
+    public final SelectionKey register(Selector sel, int ops, Object att); //注册一个选择器并设置监听事件，最后一个参数可以设置共享数据
+    
+    public final void close();//关闭通道
+    
+    // ...
+}
+```
