@@ -196,3 +196,73 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
     // ...
 }
 ```
+**DEMO**
+
+[GroupChatServer.java](../src/main/java/mynio/example/GroupChatServer.java)
+
+[GroupChatClient.java](../src/main/java/mynio/example/GroupChatClient.java)
+
+
+## NIO与零拷贝
+- 零拷贝是网络编程的关键，很多性能优化都离不开
+- 在Java中，常用的零拷贝有mmap(内存映射)和sendFile。
+- 零拷贝不是不拷贝 从操作系统的角度来看 是没有CPU拷贝的
+
+**传统IO在OS中是怎么操作的**
+> DMA: direct memory access 不适用CPU
+
+```
+File file = new File("test.txt");
+RandomAccessFile raf = new RandomAccessFile(file, "rw");
+
+byte[] arr = new byte[(int) file.length()];
+raf.read(arr);
+
+Socket socket = new ServerSocket(8080).accept();
+socket.getOutputStream().write(arr);
+```
+![传统IO在OS中是怎么操作](pic/nio/zerocopy/传统IO的OS流程.jpg.jpg)
+
+- 图的上半部分代表的是状态的切换 (用户态，内核态)
+1. 硬盘上的数据 通过DMA拷贝到 内核buffer
+2. 内核Buffer 通过CPU拷贝到 用户buffer
+3. 用户Buffer 通过CPU拷贝到 socket buffer
+4. socket buffer 通过DMA拷贝到 协议栈
+- 总结：这个例子一共经过了4次拷贝3次上下文切换
+
+**mmap(memory map)优化**
+> 直接内存映射优化
+
+- mmap 通过内存映射，将文件映射到内核缓冲区，同时，用户空间可以共享内核空间的数据。这样，在进行网络传输时，就可以减少内核空间到用户控件的拷贝次数。
+
+![mmap优化示意图](pic/nio/zerocopy/mmap优化.jpg)
+
+1.硬盘上的数据 通过DMA拷贝到 内核buffer
+2.user buffer 共享 kernel buffer （内存映射的原因）
+3.kernel buffer 通过CPU拷贝到 socket buffer
+4.socket buffer 通过DMA拷贝到 协议栈
+- 总结： 这个图示的拷贝次数减少为3次,状态的切换次数还是没有改变
+
+**sendFile优化**
+- Linux 2.1 版本 提供了 sendFile 函数，其基本原理如下：数据根本不经过用户态，直接从内核缓冲区进入到 Socket Buffer，同时，由于和用户态完全无关，就减少了一次上下文切换
+
+![sendFile优化示意图](pic/nio/zerocopy/sendFile优化.jpg)
+
+
+**sendFile优化2**
+- Linux 在 2.4 版本中，做了一些修改，避免了从内核缓冲区拷贝到 Socket buffer 的操作，直接拷贝到协议栈，从而再一次减少了数据拷贝
+
+![sendFile优化2示意图](pic/nio/zerocopy/sendFile优化2.jpg)
+- 这里面其实还是有一次cpu的拷贝。从kernel buffer 到 socket buffer。但是拷贝的数据量很少，比如length,offset等一些描述信息,消耗低,可以忽略
+- 总结： 这个图示的拷贝次数减少为2次,状态的切换次数为2次
+
+**零拷贝的再次理解**
+1. 我们说零拷贝，是从操作系统的角度来说的。因为内核缓冲区之间，没有数据是重复的（只有 kernel buffer 有一份数据）
+2. 零拷贝不仅仅带来更少的数据复制，还能带来其他的性能优势，例如更少的上下文切换，更少的 CPU 缓存伪共享以及无 CPU 校验和计算
+
+**mmap和sendFile的区别**
+- mmap 适合小数据量读写，sendFile 适合大文件传输
+- mmap 需要 4 次上下文切换，3 次数据拷贝；sendFile 需要 3 次上下文切换，最少 2 次数据拷贝
+- sendFile 可以利用 DMA 方式，减少 CPU 拷贝，mmap 则不能（必须从内核拷贝到 Socket 缓冲区） 
+
+**DEMO**

@@ -25,7 +25,10 @@ public class GroupChatClient {
         // 初始化
         this.selector = Selector.open();
 
-        this.socketChannel = SocketChannel.open(new InetSocketAddress(HOST, PORT));
+//        this.socketChannel = SocketChannel.open(new InetSocketAddress(HOST, PORT));
+
+        this.socketChannel = SocketChannel.open();
+        socketChannel.socket().connect(new InetSocketAddress(HOST, PORT));
 
         socketChannel.configureBlocking(false);
 
