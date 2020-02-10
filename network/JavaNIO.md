@@ -266,3 +266,8 @@ socket.getOutputStream().write(arr);
 - sendFile 可以利用 DMA 方式，减少 CPU 拷贝，mmap 则不能（必须从内核拷贝到 Socket 缓冲区） 
 
 **DEMO**
+
+#Java AIO 介绍
+- JDK 7 引入了 Asynchronous I/O，即 AIO。在进行 I/O 编程中，常用到两种模式：Reactor和 Proactor。Java 的 NIO 就是 Reactor，当有事件触发时，服务器端得到通知，进行相应的处理
+- AIO 即 NIO2.0，叫做异步不阻塞的 IO。AIO 引入异步通道的概念，采用了 Proactor 模式，简化了程序编写，有效的请求才启动线程，它的特点是先由操作系统完成后才通知服务端程序启动线程去处理，一般适用于连接数较多且连接时间较长的应用
+- [<<Java新一代网络编程模型AIO原理及Linux系统AIO介绍>>](http://www.52im.net/thread-306-1-1.html  )
