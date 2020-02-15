@@ -1,12 +1,11 @@
-package mynetty.simple;
+package mynetty.taskqueue.demo3;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPipeline;
 import io.netty.util.CharsetUtil;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 自定义的handler要继承netty里面规定好的某个Handler
@@ -28,26 +27,13 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        // 输出服务器读取线程
+        // 用户自定义定时任务 -> 该任务提交到scheduledTaskQueue中
 
-        System.out.println("服务器读取线程:" + Thread.currentThread().getName());
+        ctx.channel().eventLoop().schedule(() -> {
+            ctx.writeAndFlush(Unpooled.copiedBuffer("Hello，客户端~ 喵喵4", CharsetUtil.UTF_8));
+        }, 5, TimeUnit.SECONDS);
 
-        System.out.println("server ctx " + ctx);
-
-        Channel channel = ctx.channel();
-        ChannelPipeline pipeline = ctx.pipeline(); // 本质是一个双向列表 涉及到入站出战问题
-
-        System.out.println("channel 和 pipeline 的关系 -->" +
-                " channel.pipeline().equals(pipeline) :" + channel.pipeline().equals(pipeline) + "。 pipeline.channel().equals(channel):" + pipeline.channel().equals(channel));
-
-        // 对msg进行处理
-
-        // ByteBuf 由 netty 提供
-        ByteBuf buf = (ByteBuf) msg;
-
-        System.out.println("客户端发送消息为:" + buf.toString(CharsetUtil.UTF_8));
-
-        System.out.println("客户端地址:" + ctx.channel().remoteAddress());
+        System.out.println("go on ...");
     }
 
 
@@ -63,7 +49,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         // 将数据写入缓冲并刷新
         // 一般来将 对 发送的数据 进行编码
 
-        ctx.writeAndFlush(Unpooled.copiedBuffer("Hello，客户端~", CharsetUtil.UTF_8));
+        ctx.writeAndFlush(Unpooled.copiedBuffer("Hello，客户端~ 喵喵1", CharsetUtil.UTF_8));
     }
 
     /**

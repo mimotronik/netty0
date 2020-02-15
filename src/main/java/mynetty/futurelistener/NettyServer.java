@@ -1,7 +1,8 @@
-package mynetty.simple;
+package mynetty.futurelistener;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -14,7 +15,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * @author winterfell
  */
 public class NettyServer {
-
     public static void main(String[] args) throws Exception {
 
         /*
@@ -39,6 +39,10 @@ public class NettyServer {
                         // 给 pipeline 设置处理器
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
+
+                            // 可以用一个集合管理SocketChannel,在推送消息时，可以将业务加入到各个channel 对应的 NioEventLoop 的 taskQueue 或者 scheduledTaskQueue
+                            System.out.println("客户socketChannel的hashCode为: " + ch.hashCode());
+
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new NettyServerHandler());
                         }
@@ -50,6 +54,18 @@ public class NettyServer {
             // 启动服务器并绑定端口
             ChannelFuture channelFuture = bootstrap.bind(6668).sync();
 
+            // 添加 listener 关注我们关心的事件
+            channelFuture.addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        System.out.println("监听端口 6668 成功");
+                    } else {
+                        System.out.println("监听端口 6668 失败");
+                    }
+                }
+            });
+
             // 对 关闭通道 进行监听
             channelFuture.channel().closeFuture().sync();
         } finally {
@@ -57,25 +73,5 @@ public class NettyServer {
             workerGroup.shutdownGracefully();
         }
     }
+
 }
-
-/*
-bossGroup 和 workerGroup 含有子线程（NioEventLoop）的个数
-    默认是CPU的核数*2
-
-workerGroup里面处理业务的线程 是按照顺序循环的 参考 NettyServerHandler 里面的线程打印
-
-channel 和 pipeline 相互包含 channel可以取到pipeline ,pipeline可以取到channel 参见debug
-ChannelHandlerContext 既包含channel也包含pipeline  ChannelHandlerContext可以获取到更多信息
-
-NioEventLoop里面重要的有 selector 还有个就是taskQueue
-
-taskQueue (和Channel有绑定关系)
-    任务队列中的task有3种典型的使用场景
-    1. 用户程序自定义的普通任务
-    2. 用户自定义定时任务
-    3. 非当前Reactor调用Channel的各种方法
-        例如在推送系统的业务线程里面，根据用户标识，找到对应的Channel引用，然后调用write方法向该用户推送消息，就会进入到这种场景。最终的write会提交到任务队列中后被异步消费
-        【推动业务，用户标识，对应Channel，异步消费】
-    （demo：向任务队列里面提交任务）
- */
