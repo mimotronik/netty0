@@ -419,3 +419,20 @@ public static ByteBuf copiedBuffer(CharSequence string, Charset charset)
 
 [MyServerHandler.java](../src/main/java/mynetty/heartbeat/MyServerHandler.java)
 
+**Netty的websocket**
+
+- Http协议是无状态的, 浏览器和服务器间的请求响应一次，下一次会重新创建连接.
+- 实现基于webSocket的长连接的全双工的交互
+- 改变Http协议多次请求的约束，实现长连接了， 服务器可以发送消息给浏览器
+- 客户端浏览器和服务器端会相互感知，比如服务器关闭了，浏览器会感知，同样浏览器关闭了，服务器会感知
+- 浏览器在发送 `ws://localhost:7000/hello` 的时候
+![websocket请求](pic/netty/websocket请求.jpg)
+    - 返回的状态码为 101
+    - 协议升级为 websocket
+
+[MyServer.java](../src/main/java/mynetty/websocket/MyServer.java)
+
+[MyServerHandler.java](../src/main/java/mynetty/websocket/MyServerHandler.java)
+
+
+**Protobuf**
