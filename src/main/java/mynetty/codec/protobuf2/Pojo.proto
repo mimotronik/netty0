@@ -1,0 +1,37 @@
+syntax = "proto3";
+// 加快解析
+option optimize_for = SPEED;
+option java_package = "mynetty.codec.protobuf2";
+option java_outer_classname = "MyDataInfo";
+
+// protobuf 中可以使用message 管理其他的message
+message MyMessage {
+
+    // 定义一个枚举类型
+    enum DataType {
+        StudentType = 0;
+        WorkerType = 1;
+    }
+
+    // 用 DataType 来标识 传的是哪一个枚举类型
+    // 1 代表第一个属性
+    DataType data_type = 1;
+
+    // 表示枚举类型最多只能出现 其中的一个节省空间
+    // 2和3 应该是为了标识顺序
+    oneof dataBody {
+        Student student = 2;
+        Worker worker = 3;
+    }
+}
+
+
+message Student {
+    int32 id = 1;
+    string name = 2;
+}
+
+message Worker {
+    int32 id = 1;
+    string name = 2;
+}

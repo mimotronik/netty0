@@ -415,9 +415,9 @@ public static ByteBuf copiedBuffer(CharSequence string, Charset charset)
     - 当服务器超过5秒没有写的时候，提示 写空闲
     - 当服务器超过7秒没有读或者写的时候，提示 读写空闲
     
-[MyServer.java](../src/main/java/mynetty/heartbeat/MyServer.java)
+    [MyServer.java](../src/main/java/mynetty/heartbeat/MyServer.java)
 
-[MyServerHandler.java](../src/main/java/mynetty/heartbeat/MyServerHandler.java)
+    [MyServerHandler.java](../src/main/java/mynetty/heartbeat/MyServerHandler.java)
 
 **Netty的websocket**
 
@@ -430,9 +430,19 @@ public static ByteBuf copiedBuffer(CharSequence string, Charset charset)
     - 返回的状态码为 101
     - 协议升级为 websocket
 
-[MyServer.java](../src/main/java/mynetty/websocket/MyServer.java)
+    [MyServer.java](../src/main/java/mynetty/websocket/MyServer.java)
 
-[MyServerHandler.java](../src/main/java/mynetty/websocket/MyServerHandler.java)
+    [MyServerHandler.java](../src/main/java/mynetty/websocket/MyServerHandler.java)
+
 
 
 **Protobuf**
+- 编码和解码的基本介绍
+1. 编写网络应用程序时，因为数据在网络中传输的都是二进制字节码数据，在发送数据时就需要编码，接收数据时就需要解码 
+2. codec(编解码器) 的组成部分有两个：decoder(解码器)和 encoder(编码器)。encoder 负责把业务数据转换成字节码数据，decoder 负责把字节码数据转换成业务数据
+
+- 介绍
+1. Protobuf 是 Google 发布的开源项目，全称 Google Protocol Buffers，是一种轻便高效的结构化数据存储格式，可以用于结构化数据串行化，或者说序列化。它很适合做数据存储或 RPC[远程过程调用  remote procedure call ] 数据交换格式 。目前很多公司 http+json tcp+protobuf
+2. [参考文档](https://developers.google.com/protocol-buffers/docs/proto)
+3. Protobuf 是以 message 的方式来管理数据的
+4. 支持跨平台、跨语言，即[客户端和服务器端可以是不同的语言编写的] （支持目前绝大多数语言，例如 C++、C#、Java、python 等）
