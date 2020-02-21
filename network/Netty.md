@@ -446,3 +446,60 @@ public static ByteBuf copiedBuffer(CharSequence string, Charset charset)
 2. [参考文档](https://developers.google.com/protocol-buffers/docs/proto)
 3. Protobuf 是以 message 的方式来管理数据的
 4. 支持跨平台、跨语言，即[客户端和服务器端可以是不同的语言编写的] （支持目前绝大多数语言，例如 C++、C#、Java、python 等）
+
+## Netty编解码器以及调用机制
+
+基本说明
+- netty的组件设计：Netty的主要组件有Channel、EventLoop、ChannelFuture、ChannelHandler、ChannelPipe等
+- ChannelHandler充当了处理入站和出站数据的应用程序逻辑的容器。例如，实现ChannelInboundHandler接口（或ChannelInboundHandlerAdapter），你就可以接收入站事件和数据，这些数据会被业务逻辑处理。当要给客户端发送响应时，也可以从ChannelInboundHandler冲刷数据。业务逻辑通常写在一个或者多个ChannelInboundHandler中。ChannelOutboundHandler原理一样，只不过它是用来处理出站数据的
+- ChannelPipeline提供了ChannelHandler链的容器。以客户端应用程序为例，如果事件的运动方向是从客户端到服务端的，那么我们称这些事件为出站的，即客户端发送给服务端的数据会通过pipeline中的一系列ChannelOutboundHandler，并被这些Handler处理，反之则称为入站的
+
+![ChannelHandler出入站](pic/netty/ChannelHandler出入站.jpg)
+
+- 调用链
+    - 不论解码器handler 还是 编码器handler 即接收的消息类型必须与待处理的消息类型一致，否则该handler不会被执行
+    - 在解码器 进行数据解码时，需要判断 缓存区(ByteBuf)的数据是否足够 ，否则接收到的结果会期望结果可能不一致
+    
+![ChannelHandler调用链](pic/netty/ChannelHandler调用链.jpg)
+
+- ReplayingDecoder
+    - ReplayingDecoder扩展了ByteToMessageDecoder类，使用这个类，我们不必调用readableBytes()方法。参数S指定了用户状态管理的类型，其中Void代表不需要状态管理
+    - [ReplayingDecoder Demo](../src/main/java/mynetty/inandout/decoderandendocer/MyByteToLongDecoder2.java)
+    - ReplayingDecoder使用方便，但它也有一些局限性
+        - 并不是所有的 ByteBuf 操作都被支持，如果调用了一个不被支持的方法，将会抛出一个 UnsupportedOperationException
+        - ReplayingDecoder 在某些情况下可能稍慢于 ByteToMessageDecoder，例如网络缓慢并且消息格式复杂时，消息会被拆成了多个碎片，速度变慢
+   
+**其他编解码器**
+1. LineBasedFrameDecoder：这个类在Netty内部也有使用，它使用行尾控制字符（`\n`或者`\r\n`）作为分隔符来解析数据
+2. DelimiterBasedFrameDecoder：使用自定义的特殊字符作为消息的分隔符。
+3. HttpObjectDecoder：一个HTTP数据的解码器
+4. LengthFieldBasedFrameDecoder：通过指定长度来标识整包消息，这样就可以自动的处理黏包和半包消息
+5. ......
+
+## TCP粘包拆包
+**基本介绍**
+- TCP是面向连接的，面向流的，提供高可靠性服务。收发两端（客户端和服务器端）都要有一一成对的socket，因此，发送端为了将多个发给接收端的包，更有效的发给对方，使用了优化方法（Nagle算法），将多次间隔较小且数据量小的数据，合并成一个大的数据块，然后进行封包。这样做虽然提高了效率，但是接收端就难于分辨出完整的数据包了，因为面向流的通信是无消息保护边界的
+    - 重要：通信是无消息保护边界
+- 由于TCP无消息保护边界, 需要在接收端处理消息边界问题，也就是我们所说的粘包、拆包问题, 看一张图
+
+![TCP粘包拆包](pic/netty/TCP粘包拆包.jpg)
+
+假设客户端分别发送了两个数据包D1和D2给服务端，由于服务端一次读取到字节数是不确定的，故可能存在以下四种情况：
+1. 服务端分两次读取到了两个独立的数据包，分别是D1和D2，没有粘包和拆包
+2. 服务端一次接受到了两个数据包，D1和D2粘合在一起，称之为TCP粘包
+3. 服务端分两次读取到了数据包，第一次读取到了完整的D1包和D2包的部分内容，第二次读取到了D2包的剩余内容，这称之为TCP拆包
+4. 服务端分两次读取到了数据包，第一次读取到了D1包的部分内容D1_1，第二次读取到了D1包的剩余部分内容D1_2和完整的D2包。
+
+- demo
+    - [TCP粘包服务器](../src/main/java/mynetty/tcp/demo/MyServer.java)
+    - [TCP粘包客户端](../src/main/java/mynetty/tcp/demo/MyClient.java) 多运行几次就出现
+    
+**TCP粘包拆包解决方案**
+1. 使用自定义协议 + 编解码器 来解决
+2. 关键就是要解决 服务器端每次读取数据长度的问题, 这个问题解决，就不会出现服务器多读或少读数据的问题，从而避免的TCP 粘包、拆包
+    - 关键： 要解决 服务器端每次读取数据长度的问题
+3. 代码DEMO [MessageProtocol](../src/main/java/mynetty/tcp/protocol/MessageProtocol.java)
+    - 自定义协议 [MessageProtocol](../src/main/java/mynetty/tcp/protocol/MessageProtocol.java)
+    - 自定义编解码器 
+        - [MyMessageDecoder](../src/main/java/mynetty/tcp/protocol/MyMessageDecoder.java)
+        - [MyMessageEncoder](../src/main/java/mynetty/tcp/protocol/MyMessageEncoder.java)
