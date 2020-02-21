@@ -345,6 +345,20 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
 }
 ```
 
+**Pipeline 和 ChannelPipeline （重点！！！）**
+1. ChannelPipeline 是一个 Handler 的集合，它负责处理和拦截 inbound 或者 outbound 的事件和操作，相当于一个贯穿 Netty 的链。(也可以这样理解：ChannelPipeline 是 保存 ChannelHandler 的 List，用于处理或拦截 Channel 的入站事件和出站操作)
+2. ChannelPipeline 实现了一种高级形式的拦截过滤器模式，使用户可以完全控制事件的处理方式，以及 Channel 中各个的 ChannelHandler 如何相互交互
+3. 在 Netty 中每个 Channel 都有且仅有一个 ChannelPipeline 与之对应，它们的组成关系如下
+
+![Channel和ChannelPipeline关系](pic/netty/Channel和ChannelPipeline关系.jpg)
+    - 一个 Channel 包含了一个 ChannelPipeline，而 ChannelPipeline 中又维护了一个由 ChannelHandlerContext 组成的双向链表，并且每个 ChannelHandlerContext 中又关联着一个 ChannelHandler
+    - 入站事件和出站事件在一个双向链表中，入站事件会从链表 head 往后传递到最后一个入站的 handler，出站事件会从链表 tail 往前传递到最前一个出站的 handler，两种类型的 handler 互不干扰
+4. 常用方法
+    - `ChannelPipeline addFirst(ChannelHandler... handlers)`，把一个业务处理类（handler）添加到链中的第一个位置
+    - `ChannelPipeline addLast(ChannelHandler... handlers)`，把一个业务处理类（handler）添加到链中的最后一个位置
+
+
+
 **ChannelHandlerContext**
 1. 保存 Channel 相关的所有上下文信息，同时关联一个 ChannelHandler 对象
 2. 即ChannelHandlerContext 中包含一个具体的事件处理器 ChannelHandler ， 同时ChannelHandlerContext 中也绑定了对应的 pipeline 和 Channel 的信息，方便对 ChannelHandler进行调用.
@@ -388,3 +402,20 @@ ChannelOption.SO_KEEPALIVE
 //通过给定的数据和字符编码返回一个 ByteBuf 对象（类似于 NIO 中的 ByteBuffer 但有区别）
 public static ByteBuf copiedBuffer(CharSequence string, Charset charset)
 ```
+3. 区域划分
+
+![ByteBuf](pic/netty/ByteBuf.jpg)
+    - `0 ~ readerIndex` : 已读区域
+    - `readerIndex ~ writerIndex` : 可读区域
+    - `writerIndex ~ capacity` : 可写区域
+
+**Netty心跳监测机制**
+- demo 编写一个Netty心跳检测机制
+    - 当服务器超过3秒没有读的时候，提示 读空闲
+    - 当服务器超过5秒没有写的时候，提示 写空闲
+    - 当服务器超过7秒没有读或者写的时候，提示 读写空闲
+    
+[MyServer.java](../src/main/java/mynetty/heartbeat/MyServer.java)
+
+[MyServerHandler.java](../src/main/java/mynetty/heartbeat/MyServerHandler.java)
+
