@@ -1,7 +1,5 @@
 package mynio.selector;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
